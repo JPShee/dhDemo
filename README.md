@@ -1,7 +1,7 @@
-#Dash Hudson Flask Demo API
+# Dash Hudson Flask Demo API
 A Flask todo demo app
 
-##How to Run
+## How to Run
 ```
 git clone https://github.com/JPShee/dhDemo.git
 cd dhDemo
@@ -15,7 +15,7 @@ python dbSetup.py
 python hello.py
 ```
 
-###API
+## API
 The API endpoints are as follows
 /newList(POST)
 Takes in the arguments "title" and "description" and creates a new todo list
