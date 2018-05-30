@@ -16,7 +16,7 @@ class TodoList(db.Model):
 	title = db.Column('title', db.Text)
 	description = db.Column('description', db.Text)
 	createdAt = db.Column('createdAt', db.DateTime, index=True, default=datetime.utcnow())
-	updateAt = db.Column('updatedAt', db.DateTime)	
+	updatedAt = db.Column('updatedAt', db.DateTime)	
 	todoitems = db.relationship('TodoItem', cascade='all, delete-orphan')
 
 class TodoItem(db.Model):
@@ -26,7 +26,7 @@ class TodoItem(db.Model):
 	complete = db.Column('complete', db.Boolean, default=False)
 	listId = db.Column('listId', db.ForeignKey('todolists.id'), nullable=False)
 	createdAt = db.Column('createdAt', db.DateTime, index=True, default=datetime.utcnow())
-	updateAt = db.Column('updatedAt', db.DateTime)	
+	updatedAt = db.Column('updatedAt', db.DateTime)	
 
 ##Handle JSON responses to more easily return##
 ##There may have been a better way to do this##
@@ -61,28 +61,28 @@ def newList():
 	if 'title' not in data:
 		abort(400)
 	todolist = TodoList(title=data['title'], description=['description'], 
-		updateAt=datetime.utcnow())
+		updatedAt=datetime.utcnow())
 	db.session.add(todolist)
 	db.session.commit()
-	return jsonify({"message": todolist.id })
+	return jsonify({"message": todolist.id }), 201
 
 ##Return all lists##
 @app.route("/getLists", methods=['GET'])
 def getLists():
 	retrievedLists = [serialize_list(x) for x in TodoList.query.order_by(TodoList.createdAt)]
 	if retrievedLists:
-		return jsonify({"Todo Lists": retrievedLists})
+		return jsonify({"Todo Lists": retrievedLists}), 200
 	else:
-		abort(400)
+		abort(404)
 
 ##Return a specific list##
 @app.route("/getAList/<int:id>", methods=['GET'])
 def getAList(id):
 	check = serialize_list(Todolist.query.get(id))
 	if check:
-		return jsonify({"Requested Todo List": check})
+		return jsonify({"Requested Todo List": check}), 200
 	else:
-		abort(400)
+		abort(404)
 
 ##Delete a provided list and the accompanying todo items##
 @app.route("/deleteList/<int:id>", methods=['DELETE'])
@@ -91,9 +91,9 @@ def deleteList(id):
 	if check:
 		db.session.delete(check)
 		db.session.commit()
-		return jsonify({"message": "entry deleted"})
+		return jsonify({"message": "entry deleted"}), 200
 	else:
-		abort(400)
+		abort(404)
 
 ##Edit the title and description for a list##
 @app.route("/editListInfo/<int:id>", methods=['PUT'])
@@ -104,14 +104,14 @@ def editListInfo(id):
 	todolist = TodoList.query.get(id)
 	if todolist:
 		todolist.title = data['title']
-		todolist.updateAt = datetime.utcnow()
+		todolist.updatedAt = datetime.utcnow()
 		if 'description' not in data:
 			db.session.commit()
-			return jsonify({"message": todolist.id})
+			return jsonify({"message": todolist.id}), 200
 		db.session.commit()
-		return jsonify({"message": todolist.id})
+		return jsonify({"message": todolist.id}), 200
 	else:
-		abort(400)
+		abort(404)
 
 ##Return the items on a specific list##
 @app.route("/getListItems/<int:id>", methods=['GET'])
@@ -119,9 +119,9 @@ def getListItems(id):
 	queryStr = TodoItem.query.filter_by(listId=id).order_by(TodoItem.createdAt)
 	retrievedItems = [serialize_items(x) for x in queryStr]
 	if retrievedItems:
-		return jsonify({"List Items": retrievedItems})
+		return jsonify({"List Items": retrievedItems}), 200
 	else:
-		abort(400)
+		abort(404)
 
 ##Add a new todo item to a list##
 @app.route("/newTodoItem", methods=['POST'])
@@ -134,9 +134,9 @@ def newTodoItem():
 		todoitem = TodoItem(description=['description'], listId=data['listId'])
 		db.session.add(todoitem)
 		db.session.commit()
-		return jsonify({"message": "todo list item added"})
+		return jsonify({"message": "todo list item added"}), 201
 	else:
-		abort(400)
+		abort(404)
 
 ##Edit the description of a provided todo item##
 @app.route("/editTodoInfo/<int:id>", methods=['PUT'])
@@ -147,11 +147,11 @@ def editTodoInfo(id):
 	todoitem = TodoItem.query.get(id)
 	if todoitem:
 		todoitem.description = data['description']
-		todoitem.updateAt = datetime.utcnow()
+		todoitem.updatedAt = datetime.utcnow()
 		db.session.commit()
-		return jsonify({"message": "todo list item updated"})
+		return jsonify({"message": "todo list item updated"}), 200
 	else:
-		abort(400)
+		abort(404)
 
 ##Toggles the completed status of a provided todo item##
 @app.route("/todoStatus/<int:id>", methods=['PUT'])
@@ -162,11 +162,11 @@ def todoStatus(id):
 			todoitem.complete = False
 		else:
 			todoitem.complete = True
-		todoitem.updateAt = datetime.utcnow()
+		todoitem.updatedAt = datetime.utcnow()
 		db.session.commit()
-		return jsonify({"message": "todo status updated"})
+		return jsonify({"message": "todo status updated"}), 200
 	else:
-		abort(400)
+		abort(404)
 
 ##Deletes a given todo item##
 @app.route("/deleteTodo/<int:id>", methods=['DELETE'])
@@ -175,9 +175,9 @@ def deleteTodo(id):
 	if todoitem:
 		db.session.delete(todoitem)
 		db.session.commit()
-		return jsonify({"message": "todo succesfully deleted"})
+		return jsonify({"message": "todo succesfully deleted"}), 200
 	else:
-		abort(400)
+		abort(404)
 
 
 if __name__ == "__main__":
